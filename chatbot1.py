@@ -1,5 +1,9 @@
-from openai.api import OpenAI
+from openai import OpenAI
 import streamlit as st
+
+# Ensure that the 'streamlit' library is installed
+# Run the following command in your terminal:
+# pip install streamlit
 
 with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
@@ -13,7 +17,7 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
 
 for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+    st.chat_message(msg["roXXX         e"]).write(msg["content"])
 
 if prompt := st.chat_input():
     if not openai_api_key:
