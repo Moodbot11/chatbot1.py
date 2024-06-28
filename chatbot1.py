@@ -1,19 +1,17 @@
 
-stream
 import streamlit as st
 import openai
 import os
 from pydub import AudioSegment
-from pydub.playback import play
+# from pydna.playback import play
 from io import BytesIO
 
 # Initialize OpenAI client instance
 def init_openai():
-    openai_api_key = st.session_state.get("openai_api_key")
-    if openai_api_key:
-        openai.api_key = openai_api_key
-        return openai
-    return None
+    if (openai_api_key := st.session_state.get("openai_api_key")) is None:
+        openai_api_key = None
+    openai.api_key = openai_api_key
+    return openai
 
 # Function to generate speech from text
 def generate_speech(text, client):
@@ -33,6 +31,7 @@ def transcribe_speech(file_buffer, client):
     )
     return response["text"]
 
+# sourcery skip: use-named-expression
 with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="openai_api_key", type="password")
     if openai_api_key:
@@ -40,7 +39,7 @@ with st.sidebar:
 
     "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
     "[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)"
-    "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)"
+    "[![Open in GitHub I can push it](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)"
 
 st.title("💬 Chatbot")
 st.caption("🚀 A Streamlit chatbot powered by OpenAI")
@@ -55,31 +54,28 @@ for msg in st.session_state["messages"]:
 
 openai_client = init_openai()
 
-if prompt := st.chat_input():
-    if not openai_client:
-        st.info("Please add your OpenAI API key to continue.")
-        st.stop()
+if (prompt := st.chat_input()) and not openai_client:
+    st.info("Please add your OpenAI API key to continue.")
+    st.stop()
 
-    st.session_state["messages"].append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
+st.session_state["messages"].append({"role": "user", "content": prompt})
+st.chat_message("user").write(prompt)
 
-    response = openai_client.ChatCompletion.create(
-        model="gpt-4",
-        messages=st.session_state["messages"]
-    )
+response = openai_client.ChatCompletion.create(
+    model="gpt-4",
+    messages=st.session_state["messages"]
+)
 
-    msg = response.choices[0]["message"]["content"]
-    st.session_state["messages"].append({"role": "assistant", "content": msg})
-    st.chat_message("assistant").write(msg)
+msg = response.choices[0]["message"]["content"]
+st.session_state["messages"].append({"role": "assistant", "content": msg})
+st.chat_message("assistant").write(msg)
 
-    # Provide options to generate speech or upload voice for transcription
-    if st.button("Generate Speech"):
-        if openai_client:
-            generate_speech(msg, openai_client)
+# Provide options to generate speech or upload voice for transcription
+if st.button("Generate Speech") and openai_client:
+    generate_speech(msg, openai_client)
 
-    uploaded_file = st.file_uploader("Upload Audio for Transcription", type=["mp3", "wav"])
-    if uploaded_file is not None:
-        file_buffer = BytesIO(uploaded_file.read())
-        if openai_client:
-            transcribed_text = transcribe_speech(file_buffer, openai_client)
-            st.write("Transcribed text: ", transcribed_text)
+uploaded_file = st.file_uploader("Upload Audio for Transcription", type=["mp3", "wav"])
+if uploaded_file is not None and openai_client:
+    file_buffer = BytesIO(uploaded_file.read())
+    transcribed_text = transcribe_speech(file_buffer, openai_client)
+    st.write("Transcribed text: ", transcribed_text)
